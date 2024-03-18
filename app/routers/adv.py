@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.dependences import get_current_user
 from app.schemas import SAdvList, SAdvCreate
-from app.dbcrud import AdvertisementCRUD
+from app.dbcrud import AdvertisementCRUD, CategoryCRUD
 
 router = APIRouter(
     prefix="/adv",
@@ -13,15 +13,18 @@ router = APIRouter(
 
 @router.post("/all")
 async def read_adv(avd_data: SAdvList):
-    offset = avd_data.offset if hasattr(avd_data, "offset") else 0
-    limit = avd_data.limit if hasattr(avd_data, "limit") else 10
-    results = await AdvertisementCRUD.get_all_paginated(offset=offset, limit=limit)
-    return results
+    result = await AdvertisementCRUD.get_advs_with_pagination(
+        page=avd_data.page, page_size=avd_data.page_size
+    )
+    return result
 
 
 @router.post("/create")
 async def create_adv(adv_data: SAdvCreate, current_user=Depends(get_current_user)):
     if current_user:
-        result = await AdvertisementCRUD.add(user_id=current_user.id, **adv_data.dict())
-        return result
+        categories_list = await CategoryCRUD.get_find_all()
+        if adv_data.category_id not in categories_list:
+            raise HTTPException(status_code=404, detail="Category not found")
+        await AdvertisementCRUD.add(user_id=current_user.id, **adv_data.dict())
+        return {"message": "Advertisement has been created successfully"}
     raise HTTPException(status_code=401, detail="Not authorized")

@@ -1,6 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, List
-from datetime import date
+from pydantic import BaseModel, EmailStr
 
 
 class SUserRegister(BaseModel):
@@ -20,11 +18,12 @@ class SChangeState(BaseModel):
 
 
 class SAdvList(BaseModel):
-    limit: int
-    offset: int
+    page: int
+    page_size: int
 
 
 class SAdvCreate(BaseModel):
+    category_id: int
     title: str
     description: str
 
@@ -32,3 +31,22 @@ class SAdvCreate(BaseModel):
 class SDelete(BaseModel):
     type: str
     id: int
+
+
+class SCreateCategory(BaseModel):
+    name: str
+
+
+class SMoveCategory(BaseModel):
+    adv_id: int
+    target_cat: int
+
+    class Config:
+        from_attributes = True
+
+
+class SReport(BaseModel):
+    adv_id: int
+    title: str
+    content: str
+

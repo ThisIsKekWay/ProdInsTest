@@ -1,5 +1,5 @@
 from .database import async_session_maker
-from .models import User, Advertisement, Comment
+from .models import User, Advertisement, Comment, Category, Report
 from sqlalchemy import select, insert, update, text
 from sqlalchemy.orm import selectinload, load_only
 
@@ -93,8 +93,22 @@ class AdvertisementCRUD(BaseCRUD):
             return result.scalars().all()
 
     @classmethod
-    async def get_all_paginated(cls, offset: int, limit: int):
+    async def get_advs_with_pagination(cls, page: int, page_size: int):
         async with async_session_maker() as session:
-            query = select(cls.model).offset(offset).limit(limit)
-            result = await session.execute(query)
-            return result.scalars().all()
+            query = select(Advertisement).order_by(Advertisement.id)
+            offset = (page - 1) * page_size
+            items = await session.execute(query.offset(offset).limit(page_size))
+            return items.scalars().all()
+
+
+class CategoryCRUD(BaseCRUD):
+    model = Category
+
+
+class ReportCRUD(BaseCRUD):
+    model = Report
+
+
+class CommentCRUD(BaseCRUD):
+    model = Comment
+    pass

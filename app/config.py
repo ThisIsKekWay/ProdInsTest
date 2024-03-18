@@ -1,3 +1,5 @@
+from typing import List
+
 from pydantic_settings import BaseSettings
 
 
@@ -11,9 +13,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     ALGORITHM: str
 
-    SU_USERNAME: str
-    SU_EMAIL: str
-    SU_PASSWORD: str
+    SU_EMAIL: List[str]
 
     class Config:
         env_file = ".env-non-dev"
