@@ -35,6 +35,7 @@ class Advertisement(Base):
     comments = relationship("Comment", back_populates="advertisement", cascade="all, delete")
     reports = relationship("Report", back_populates="advertisement", cascade="all, delete")
 
+
 class Comment(Base):
     __tablename__ = "comments"
 
@@ -63,11 +64,11 @@ class Report(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(255))
     content = Column(Text)
-    created_at = Column(Date)
-    creator_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    created_at = Column(Date, server_default=func.now())
+    creator_id = Column(Integer)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     advertisement_id = Column(Integer, ForeignKey("advertisements.id", ondelete="CASCADE"))
 
-    advertisement = relationship("Advertisement", back_populates="reports")
-    creator = relationship("User", back_populates="created_reports")
     user = relationship("User", back_populates="reports")
+    advertisement = relationship("Advertisement", back_populates="reports")
+

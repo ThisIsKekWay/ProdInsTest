@@ -17,13 +17,13 @@ async def get_current_user(token: str = Depends(get_token)):
     try:
         payload = decode(token, settings.SECRET_KEY, settings.ALGORITHM)
     except PyJWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="One")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unhandled exception")
     expire: str = payload.get('exp')
     if not expire or (int(expire) < datetime.now(UTC).timestamp()):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="TWO")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
     user_id = payload.get("sub")
     if not user_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Three")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unrecognized user")
     user = await UserCRUD.find_by_id(int(user_id))
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="No user found")

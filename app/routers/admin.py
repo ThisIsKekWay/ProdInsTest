@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends
 
-from app.dbcrud import UserCRUD, AdvertisementCRUD, CommentCRUD, CategoryCRUD
+from app.dbcrud import UserCRUD, AdvertisementCRUD, CommentCRUD, CategoryCRUD, ReportCRUD
 from app.dependences import get_current_user
-from app.schemas import SChangeState, SDelete, SCreateCategory, SMoveCategory
+from app.schemas import SChangeState, SDelete, SCreateCategory, SMoveCategory, SObjList, SGetItem
 
 router = APIRouter(
     prefix="/admin",
@@ -11,7 +11,7 @@ router = APIRouter(
 )
 
 
-@router.post('/changestate')
+@router.post('/change_state')
 async def change_user_state(user_data: SChangeState, current_user=Depends(get_current_user)):
     if current_user:
         if not current_user.is_superuser:
@@ -32,7 +32,7 @@ async def change_user_state(user_data: SChangeState, current_user=Depends(get_cu
 
 
 @router.delete('/delete')
-async def delete(content_target: SDelete, current_user=Depends(get_current_user)):
+async def delete_object(content_target: SDelete, current_user=Depends(get_current_user)):
     if current_user:
         if current_user.is_superuser:
             data_type = content_target.type
@@ -51,18 +51,23 @@ async def delete(content_target: SDelete, current_user=Depends(get_current_user)
                 if data:
                     await CommentCRUD.delete_by_id(data.id)
                     return {"message": "Comment has been deleted successfully"}
-            if data_type == 'cat':
+            if data_type == 'category':
                 data = await CategoryCRUD.find_one_or_none(id=content_target.id)
                 if data:
                     await CategoryCRUD.delete_by_id(data.id)
                     return {"message": "Category has been deleted successfully"}
+            if data_type == 'report':
+                data = await ReportCRUD.find_one_or_none(id=content_target.id)
+                if data:
+                    await ReportCRUD.delete_by_id(data.id)
+                    return {"message": "Report has been deleted successfully"}
             raise HTTPException(status_code=404, detail="Object not found")
         raise HTTPException(status_code=403, detail="You don't have enough permission")
     raise HTTPException(status_code=401, detail="Not authorized")
 
 
 @router.post('/create_cat')
-async def create_cat(cat_name: SCreateCategory, current_user=Depends(get_current_user)):
+async def create_category(cat_name: SCreateCategory, current_user=Depends(get_current_user)):
     if current_user:
         if current_user.is_superuser:
             category = await CategoryCRUD.find_one_or_none(name=cat_name.name)
@@ -75,7 +80,7 @@ async def create_cat(cat_name: SCreateCategory, current_user=Depends(get_current
 
 
 @router.post("/move_item_to_category")
-async def move_item(move_data: SMoveCategory, current_user=Depends(get_current_user)):
+async def switch_advertisement_category(move_data: SMoveCategory, current_user=Depends(get_current_user)):
     if current_user:
         if current_user.is_superuser or current_user.is_moderator:
             adv = await AdvertisementCRUD.find_one_or_none(id=move_data.adv_id)
@@ -86,5 +91,23 @@ async def move_item(move_data: SMoveCategory, current_user=Depends(get_current_u
                 raise HTTPException(status_code=404, detail="Category not found")
             await AdvertisementCRUD.update_by_id(adv.id, category_id=cat.id)
             return {"message": "Advertisement has been moved to the category successfully"}
+        raise HTTPException(status_code=403, detail="You don't have enough permission")
+    raise HTTPException(status_code=401, detail="Not authorized")
+
+
+@router.post('/get_reports')
+async def get_all_reports_paginated(page_data: SObjList, current_user=Depends(get_current_user)):
+    if current_user:
+        if current_user.is_superuser or current_user.is_moderator:
+            return await ReportCRUD.get_obj_with_pagination(**page_data.dict())
+        raise HTTPException(status_code=403, detail="You don't have enough permission")
+    raise HTTPException(status_code=401, detail="Not authorized")
+
+
+@router.post('/get_report')
+async def get_report_by_id(target: SGetItem, current_user=Depends(get_current_user)):
+    if current_user:
+        if current_user.is_superuser or current_user.is_moderator:
+            return await ReportCRUD.find_one_or_none(**target.dict())
         raise HTTPException(status_code=403, detail="You don't have enough permission")
     raise HTTPException(status_code=401, detail="Not authorized")

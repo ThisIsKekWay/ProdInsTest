@@ -17,7 +17,7 @@ class SChangeState(BaseModel):
     email: EmailStr
 
 
-class SAdvList(BaseModel):
+class SObjList(BaseModel):
     page: int
     page_size: int
 
@@ -50,3 +50,10 @@ class SReport(BaseModel):
     title: str
     content: str
 
+
+class SAdvDelete(BaseModel):
+    id: int
+
+
+class SGetItem(BaseModel):
+    id: int

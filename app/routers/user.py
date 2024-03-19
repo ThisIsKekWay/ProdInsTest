@@ -57,17 +57,3 @@ async def me(user=Depends(get_current_user)):
         raise HTTPException(status_code=401, detail="Not authorized")
     return user
 
-
-@router.post('/adv_report')
-async def adv_report(report_data: SReport, current_user=Depends(get_current_user)):
-    if current_user:
-        advertisement = await AdvertisementCRUD.find_one_or_none(id=report_data.adv_id)
-        if advertisement:
-            await ReportCRUD.add(creator_id=current_user.id,
-                                 adv_id=advertisement.id,
-                                 title=report_data.title,
-                                 content=report_data.content,
-                                 user_id=advertisement.user_id
-                                 )
-        raise HTTPException(status_code=404, detail="Advertisement not found")
-    raise HTTPException(status_code=401, detail="Not authorized")

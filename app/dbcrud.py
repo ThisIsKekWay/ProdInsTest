@@ -56,6 +56,14 @@ class BaseCRUD:
                 return {"message": "Object has been successefuly updated"}
             return {"message": "Object not found"}
 
+    @classmethod
+    async def get_obj_with_pagination(cls, page: int, page_size: int):
+        async with async_session_maker() as session:
+            query = select(cls.model).order_by(cls.model.id)
+            offset = (page - 1) * page_size
+            items = await session.execute(query.offset(offset).limit(page_size))
+            return items.scalars().all()
+
 
 class UserCRUD(BaseCRUD):
     model = User
@@ -92,14 +100,6 @@ class AdvertisementCRUD(BaseCRUD):
             result = await session.execute(query)
             return result.scalars().all()
 
-    @classmethod
-    async def get_advs_with_pagination(cls, page: int, page_size: int):
-        async with async_session_maker() as session:
-            query = select(Advertisement).order_by(Advertisement.id)
-            offset = (page - 1) * page_size
-            items = await session.execute(query.offset(offset).limit(page_size))
-            return items.scalars().all()
-
 
 class CategoryCRUD(BaseCRUD):
     model = Category
@@ -108,7 +108,15 @@ class CategoryCRUD(BaseCRUD):
 class ReportCRUD(BaseCRUD):
     model = Report
 
+    @classmethod
+    async def get_report_with_pagination(cls, page: int, page_size: int):
+        async with async_session_maker() as session:
+            query = select(cls.model).order_by(cls.model.created_at.desc())
+            offset = (page - 1) * page_size
+            items = await session.execute(query.offset(offset).limit(page_size))
+            return items.scalars().all()
+
+
 
 class CommentCRUD(BaseCRUD):
     model = Comment
-    pass
