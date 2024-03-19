@@ -57,9 +57,9 @@ class BaseCRUD:
             return {"message": "Object not found"}
 
     @classmethod
-    async def get_obj_with_pagination(cls, page: int, page_size: int):
+    async def get_obj_with_pagination(cls, page: int, page_size: int, **filter_by):
         async with async_session_maker() as session:
-            query = select(cls.model).order_by(cls.model.id)
+            query = select(cls.model).order_by(cls.model.id).filter_by(**filter_by)
             offset = (page - 1) * page_size
             items = await session.execute(query.offset(offset).limit(page_size))
             return items.scalars().all()
@@ -86,19 +86,6 @@ class UserCRUD(BaseCRUD):
 class AdvertisementCRUD(BaseCRUD):
     model = Advertisement
 
-    @classmethod
-    async def find_by_title(cls, title: str):
-        async with async_session_maker() as session:
-            query = select(cls.model).filter_by(title=title)
-            result = await session.execute(query)
-            return result.scalars().one_or_none()
-
-    @classmethod
-    async def find_by_user_id(cls, user_id: int):
-        async with async_session_maker() as session:
-            query = select(cls.model).filter_by(user_id=user_id)
-            result = await session.execute(query)
-            return result.scalars().all()
 
 
 class CategoryCRUD(BaseCRUD):
@@ -117,6 +104,13 @@ class ReportCRUD(BaseCRUD):
             return items.scalars().all()
 
 
-
 class CommentCRUD(BaseCRUD):
     model = Comment
+
+    @classmethod
+    async def get_comments_with_pagination(cls, page: int, page_size: int, advertisement_id: int):
+        async with async_session_maker() as session:
+            query = select(cls.model).filter_by(advertisement_id=advertisement_id)
+            offset = (page - 1) * page_size
+            items = await session.execute(query.offset(offset).limit(page_size))
+            return items.scalars().all()

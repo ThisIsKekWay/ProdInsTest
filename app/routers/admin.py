@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 
 from app.dbcrud import UserCRUD, AdvertisementCRUD, CommentCRUD, CategoryCRUD, ReportCRUD
 from app.dependences import get_current_user
-from app.schemas import SChangeState, SDelete, SCreateCategory, SMoveCategory, SObjList, SGetItem
+from app.schemas import SChangeState, SDelete, SCreateCategory, SMoveCategory, SObjListUnfiltered, SGetItem
 
 router = APIRouter(
     prefix="/admin",
@@ -96,7 +96,7 @@ async def switch_advertisement_category(move_data: SMoveCategory, current_user=D
 
 
 @router.post('/get_reports')
-async def get_all_reports_paginated(page_data: SObjList, current_user=Depends(get_current_user)):
+async def get_all_reports_paginated(page_data: SObjListUnfiltered, current_user=Depends(get_current_user)):
     if current_user:
         if current_user.is_superuser or current_user.is_moderator:
             return await ReportCRUD.get_obj_with_pagination(**page_data.dict())

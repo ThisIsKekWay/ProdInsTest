@@ -17,7 +17,13 @@ class SChangeState(BaseModel):
     email: EmailStr
 
 
-class SObjList(BaseModel):
+class SObjListUnfiltered(BaseModel):
+    page: int
+    page_size: int
+
+
+class SObjListFiltered(BaseModel):
+    category_id: int
     page: int
     page_size: int
 
@@ -57,3 +63,14 @@ class SAdvDelete(BaseModel):
 
 class SGetItem(BaseModel):
     id: int
+
+
+class SAdvComment(BaseModel):
+    advertisement_id: int
+    content: str
+
+
+class SCommentsPag(BaseModel):
+    advertisement_id: int
+    page: int
+    page_size: int
