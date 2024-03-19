@@ -1,7 +1,6 @@
 from .database import async_session_maker
 from .models import User, Advertisement, Comment, Category, Report
-from sqlalchemy import select, insert, update, text
-from sqlalchemy.orm import selectinload, load_only
+from sqlalchemy import select, insert
 
 
 class BaseCRUD:
@@ -35,7 +34,7 @@ class BaseCRUD:
             if obj:
                 await session.delete(obj)
                 await session.commit()
-                return {"message": "Object has been successefuly deleted"}
+                return {"message": "Object has been successfully deleted"}
             return {"message": "Object not found"}
 
     @classmethod
@@ -53,7 +52,7 @@ class BaseCRUD:
                 for key, value in update_data.items():
                     setattr(obj, key, value)
                 await session.commit()
-                return {"message": "Object has been successefuly updated"}
+                return {"message": "Object has been successfully updated"}
             return {"message": "Object not found"}
 
     @classmethod
@@ -85,7 +84,6 @@ class UserCRUD(BaseCRUD):
 
 class AdvertisementCRUD(BaseCRUD):
     model = Advertisement
-
 
 
 class CategoryCRUD(BaseCRUD):

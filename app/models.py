@@ -71,4 +71,3 @@ class Report(Base):
 
     user = relationship("User", back_populates="reports")
     advertisement = relationship("Advertisement", back_populates="reports")
-

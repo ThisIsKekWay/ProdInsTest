@@ -15,6 +15,15 @@ router = APIRouter(
 
 @router.post("/register")
 async def register(user_data: SUserRegister):
+    """
+        Зарегистрировать нового пользователя с предоставленными данными.
+
+        Параметры:
+        - user_data: SUserRegister
+
+        Возвращает:
+        - Dict: Сообщение об успешной регистрации пользователя
+    """
     user = await UserCRUD.find_one_or_none(email=user_data.email)
     if user:
         raise HTTPException(status_code=500, detail="User with this email already exists")
@@ -33,6 +42,16 @@ async def register(user_data: SUserRegister):
 
 @router.post("/login")
 async def login(response: Response, user_data: SUserLogin):
+    """
+        Войти в систему с предоставленными данными пользователя.
+
+        Параметры:
+        - response: Response
+        - user_data: SUserLogin
+
+        Возвращает:
+        - Dict: Сообщение об успешном входе пользователя в систему
+    """
     user = await UserCRUD.find_one_or_none(email=user_data.email)
     if user:
         if not verify_password(user_data.password, user.hashed_password):
@@ -47,12 +66,30 @@ async def login(response: Response, user_data: SUserLogin):
 
 @router.get("/logout")
 async def logout(response: Response):
+    """
+        Выход пользователя из системы.
+
+        Параметры:
+        - response: Response
+
+        Возвращает:
+        - Dict: Сообщение об успешном выходе пользователя из системы
+    """
     response.delete_cookie("ref_access_token")
     return {"message": "User has been logged out successfully"}
 
 
 @router.get("/me")
 async def me(user=Depends(get_current_user)):
+    """
+        Получить информацию о текущем пользователе.
+
+        Параметры:
+        - user: Depends(get_current_user)
+
+        Возвращает:
+        - Dict: Информация о текущем пользователе
+    """
     if not user:
         raise HTTPException(status_code=401, detail="Not authorized")
     return user

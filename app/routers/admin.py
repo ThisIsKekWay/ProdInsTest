@@ -13,6 +13,16 @@ router = APIRouter(
 
 @router.post('/change_state')
 async def change_user_state(user_data: SChangeState, current_user=Depends(get_current_user)):
+    """
+        Изменить состояние пользователя на основе предоставленных данных.
+
+        Параметры:
+        - user_data: SChangeState
+        - current_user: Depends(get_current_user)
+
+        Возвращает:
+        - Dict: Сообщение, указывающее успешность или неуспешность изменения состояния пользователя
+    """
     if current_user:
         if not current_user.is_superuser:
             raise HTTPException(status_code=403, detail="You don't have enough permission")
@@ -33,6 +43,16 @@ async def change_user_state(user_data: SChangeState, current_user=Depends(get_cu
 
 @router.delete('/delete')
 async def delete_object(content_target: SDelete, current_user=Depends(get_current_user)):
+    """
+        Удалить объект в зависимости от типа указанного в content_target.
+
+        Параметры:
+        - content_target: SDelete
+        - current_user: Depends(get_current_user)
+
+        Возвращает:
+        - Dict: Сообщение об успешном или неуспешном удалении объекта
+    """
     if current_user:
         if current_user.is_superuser:
             data_type = content_target.type
@@ -68,6 +88,16 @@ async def delete_object(content_target: SDelete, current_user=Depends(get_curren
 
 @router.post('/create_cat')
 async def create_category(cat_name: SCreateCategory, current_user=Depends(get_current_user)):
+    """
+        Создать категорию с указанным именем, если текущий пользователь имеет на это разрешение.
+
+        Параметры:
+        - cat_name: SCreateCategory
+        - current_user: Depends(get_current_user)
+
+        Возвращает:
+        - Dict: Сообщение об успешном или неуспешном создании категории
+    """
     if current_user:
         if current_user.is_superuser:
             category = await CategoryCRUD.find_one_or_none(name=cat_name.name)
@@ -81,6 +111,16 @@ async def create_category(cat_name: SCreateCategory, current_user=Depends(get_cu
 
 @router.post("/move_item_to_category")
 async def switch_advertisement_category(move_data: SMoveCategory, current_user=Depends(get_current_user)):
+    """
+        Переместить объявление в указанную категорию, если текущий пользователь имеет на это разрешение.
+
+        Параметры:
+        - move_data: SMoveCategory
+        - current_user: Depends(get_current_user)
+
+        Возвращает:
+        - Dict: Сообщение об успешном или неуспешном перемещении объявления в категорию
+    """
     if current_user:
         if current_user.is_superuser or current_user.is_moderator:
             adv = await AdvertisementCRUD.find_one_or_none(id=move_data.adv_id)
@@ -97,6 +137,16 @@ async def switch_advertisement_category(move_data: SMoveCategory, current_user=D
 
 @router.post('/get_reports')
 async def get_all_reports_paginated(page_data: SObjListUnfiltered, current_user=Depends(get_current_user)):
+    """
+        Получить все репорты с пагинацией, если текущий пользователь имеет на это разрешение.
+
+        Параметры:
+        - page_data: SObjListUnfiltered
+        - current_user: Depends(get_current_user)
+
+        Возвращает:
+        - Dict: Все отчеты с пагинацией
+    """
     if current_user:
         if current_user.is_superuser or current_user.is_moderator:
             return await ReportCRUD.get_obj_with_pagination(**page_data.dict())
@@ -106,6 +156,16 @@ async def get_all_reports_paginated(page_data: SObjListUnfiltered, current_user=
 
 @router.post('/get_report')
 async def get_report_by_id(target: SGetItem, current_user=Depends(get_current_user)):
+    """
+        Получить репорт по его ID, если текущий пользователь имеет на это разрешение.
+
+        Параметры:
+        - target: SGetItem
+        - current_user: Depends(get_current_user)
+
+        Возвращает:
+        - Dict: Отчет по его ID
+    """
     if current_user:
         if current_user.is_superuser or current_user.is_moderator:
             return await ReportCRUD.find_one_or_none(**target.dict())
