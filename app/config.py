@@ -12,6 +12,10 @@ class Settings(BaseSettings):
 
     SECRET_KEY: str
     ALGORITHM: str
+    
+    POSTGRES_DB: str
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
 
     SU_EMAIL: List[str]
 
