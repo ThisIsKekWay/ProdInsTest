@@ -19,6 +19,8 @@ async def change_user_state(user_data: SChangeState, current_user=Depends(get_cu
 
         Параметры:
         - user_data: SChangeState
+            - param: str тип изменения (ban, unban, promote, demote)
+            - email: str email пользователя
         - current_user: Depends(get_current_user)
 
         Возвращает:
@@ -49,6 +51,8 @@ async def delete_object(content_target: SDelete, current_user=Depends(get_curren
 
         Параметры:
         - content_target: SDelete
+            - type: str тип объекта (comment, adv, category, report)
+            - id: int ID объекта
         - current_user: Depends(get_current_user)
 
         Возвращает:
