@@ -46,10 +46,10 @@ async def create_adv(adv_data: SAdvCreate, current_user=Depends(get_current_user
     if current_user:
         categories_list = await CategoryCRUD.get_find_all()
         categories_ids = [i.id for i in categories_list]
-        if adv_data.category_id not in categories_ids:
-            raise HTTPException(status_code=404, detail="Category not found")
-        await AdvertisementCRUD.add(user_id=current_user.id, **adv_data.dict())
-        return {"message": "Advertisement has been created successfully"}
+        if adv_data.category_id in categories_ids:
+            await AdvertisementCRUD.add(user_id=current_user.id, **adv_data.dict())
+            return {"message": "Advertisement has been created successfully"}
+        raise HTTPException(status_code=404, detail="Category not found")
     raise HTTPException(status_code=401, detail="Not authorized")
 
 
@@ -63,13 +63,15 @@ async def adv_report(report_data: SReport, current_user=Depends(get_current_user
     if current_user:
         advertisement = await AdvertisementCRUD.find_one_or_none(id=report_data.adv_id)
         if advertisement:
-            await ReportCRUD.add(creator_id=current_user.id,
-                                 advertisement_id=advertisement.id,
-                                 title=report_data.title,
-                                 content=report_data.content,
-                                 user_id=advertisement.user_id
-                                 )
-            return {"message": "Report has been created successfully"}
+            if current_user.id != advertisement.user_id:
+                await ReportCRUD.add(creator_id=current_user.id,
+                                     advertisement_id=advertisement.id,
+                                     title=report_data.title,
+                                     content=report_data.content,
+                                     user_id=advertisement.user_id
+                                     )
+                return {"message": "Report has been created successfully"}
+            raise HTTPException(status_code=403, detail="You can't report your own advertisement")
         raise HTTPException(status_code=404, detail="Advertisement not found")
     raise HTTPException(status_code=401, detail="Not authorized")
 

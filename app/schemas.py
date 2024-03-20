@@ -1,3 +1,5 @@
+from typing import List
+
 from pydantic import BaseModel, EmailStr
 
 
@@ -74,3 +76,11 @@ class SCommentsPag(BaseModel):
     advertisement_id: int
     page: int
     page_size: int
+
+
+class SEmailUsage(BaseModel):
+    emails: List[EmailStr]
+
+
+class SUserEmails(BaseModel):
+    email: EmailStr

@@ -1,5 +1,5 @@
 from .database import async_session_maker
-from .models import User, Advertisement, Comment, Category, Report
+from .models import User, Advertisement, Comment, Category, Report, SUserEmails
 from sqlalchemy import select, insert
 
 
@@ -112,3 +112,7 @@ class CommentCRUD(BaseCRUD):
             offset = (page - 1) * page_size
             items = await session.execute(query.offset(offset).limit(page_size))
             return items.scalars().all()
+
+
+class SUserEmailsCRUD(BaseCRUD):
+    model = SUserEmails

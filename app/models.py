@@ -71,3 +71,10 @@ class Report(Base):
 
     user = relationship("User", back_populates="reports")
     advertisement = relationship("Advertisement", back_populates="reports")
+
+
+class SUserEmails(Base):
+    __tablename__ = "superusers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(255), unique=True, index=True)

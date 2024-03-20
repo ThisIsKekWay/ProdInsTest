@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Response, Depends
 
 from app.config import settings
-from app.schemas import SUserRegister, SUserLogin, SReport
-from app.dbcrud import UserCRUD, ReportCRUD, AdvertisementCRUD
+from app.schemas import SUserRegister, SUserLogin
+from app.dbcrud import UserCRUD, SUserEmailsCRUD
 from app.auth import get_password_hash, verify_password, create_access_token
 from app.dependences import get_current_user
 
@@ -17,6 +17,7 @@ router = APIRouter(
 async def register(user_data: SUserRegister):
     """
         Зарегистрировать нового пользователя с предоставленными данными.
+        Проверяет, является ли регистрируемый email суперпользователем в переменных окружения и специальной записи БД.
 
         Параметры:
         - user_data: SUserRegister
@@ -27,7 +28,8 @@ async def register(user_data: SUserRegister):
     user = await UserCRUD.find_one_or_none(email=user_data.email)
     if user:
         raise HTTPException(status_code=500, detail="User with this email already exists")
-    if user_data.email in settings.SU_EMAIL:
+    super_user_email_list = await SUserEmailsCRUD.find_one_or_none(email=user_data.email)
+    if user_data.email in settings.SU_EMAIL or super_user_email_list:
         hashed_pwd = get_password_hash(user_data.password)
         await UserCRUD.add(username=user_data.username,
                            email=user_data.email,
@@ -93,4 +95,3 @@ async def me(user=Depends(get_current_user)):
     if not user:
         raise HTTPException(status_code=401, detail="Not authorized")
     return user
-

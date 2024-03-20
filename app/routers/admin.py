@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends
 
-from app.dbcrud import UserCRUD, AdvertisementCRUD, CommentCRUD, CategoryCRUD, ReportCRUD
+from app.dbcrud import UserCRUD, AdvertisementCRUD, CommentCRUD, CategoryCRUD, ReportCRUD, SUserEmailsCRUD
 from app.dependences import get_current_user
-from app.schemas import SChangeState, SDelete, SCreateCategory, SMoveCategory, SObjListUnfiltered, SGetItem
+from app.schemas import (SChangeState, SDelete, SCreateCategory, SMoveCategory, SObjListUnfiltered,
+                         SGetItem, SEmailUsage, SUserEmails)
 
 router = APIRouter(
     prefix="/admin",
@@ -169,5 +170,80 @@ async def get_report_by_id(target: SGetItem, current_user=Depends(get_current_us
     if current_user:
         if current_user.is_superuser or current_user.is_moderator:
             return await ReportCRUD.find_one_or_none(**target.dict())
+        raise HTTPException(status_code=403, detail="You don't have enough permission")
+    raise HTTPException(status_code=401, detail="Not authorized")
+
+
+@router.post('/get_user_list')
+async def get_user_list(target: SObjListUnfiltered, current_user=Depends(get_current_user)):
+    """
+        Функция, которая извлекает список пользователей на основе предоставленных параметров target с пагинацией.
+        Требуется, чтобы текущий пользователь имел разрешения суперпользователя или модератора.
+        Если у пользователя есть необходимые разрешения, возвращает список пользователей с пагинацией.
+        Если у пользователя недостаточно разрешений, вызывает исключение HTTPException с кодом 403.
+        Если пользователь не авторизован, вызывает исключение HTTPException с кодом 401.
+    """
+    if current_user:
+        if current_user.is_superuser or current_user.is_moderator:
+            return await UserCRUD.get_obj_with_pagination(**target.dict())
+        raise HTTPException(status_code=403, detail="You don't have enough permission")
+    raise HTTPException(status_code=401, detail="Not authorized")
+
+
+@router.post('/get_user')
+async def get_user_by_id(target: SGetItem, current_user=Depends(get_current_user)):
+    """
+        Функция для получения пользователя по ID с заданными параметрами target и current_user.
+        Возвращает HTTPException с кодом состояния 403, если текущий пользователь не имеет прав суперпользователя
+        или модератора,
+        и HTTPException с кодом состояния 401, если пользователь не авторизован.
+    """
+    if current_user:
+        if current_user.is_superuser or current_user.is_moderator:
+            return await UserCRUD.find_one_or_none(**target.dict())
+        raise HTTPException(status_code=403, detail="You don't have enough permission")
+    raise HTTPException(status_code=401, detail="Not authorized")
+
+
+@router.post('/set_superuser_list')
+async def set_superuser_list(target: SEmailUsage, current_user=Depends(get_current_user)):
+    """
+    Функция для установки списка суперпользователей на основе предоставленного использования электронной почты.
+    Принимает 'target' в качестве параметра типа SEmailUsage и 'current_user' в качестве необязательного параметра.
+    Возвращает сообщение, указывающее количество успешно добавленных суперпользовательских электронных писем,
+    и вызывает HTTP-исключения из-за недостаточных прав или незалогиненого доступа.
+    """
+    if current_user:
+        if current_user.is_superuser:
+            counter = 0
+            for email in target.emails:
+                super_user = await SUserEmailsCRUD.find_one_or_none(email=email)
+                if not super_user:
+                    user = await UserCRUD.find_one_or_none(email=email)
+                    if not user:
+                        await SUserEmailsCRUD.add(email=email)
+                        counter += 1
+                    continue
+                continue
+            return {"message": "Successfully added {} superuser emails".format(counter)}
+        raise HTTPException(status_code=403, detail="You don't have enough permission")
+    raise HTTPException(status_code=401, detail="Not authorized")
+
+
+@router.delete('/delete_super_user_email')
+async def delete_super_user_email(target: SUserEmails, current_user=Depends(get_current_user)):
+    """
+    Функция для удаления суперпользователя на основе предоставленного адреса электронной почты.
+    Принимает 'target' в качестве параметра типа SEmailUsage и 'current_user' в качестве параметров.
+    Возвращает сообщение, указывающее успешность удаленных суперпользовательских электронных писем,
+    и вызывает HTTP-исключения из-за недостаточных прав или незалогиненного доступа.
+    """
+    if current_user:
+        if current_user.is_superuser:
+            super_user_email = await SUserEmailsCRUD.find_one_or_none(email=target.email)
+            if super_user_email:
+                await SUserEmailsCRUD.delete_by_id(super_user_email.id)
+                return {"message": "Successfully deleted superuser email"}
+            raise HTTPException(status_code=404, detail="Superuser email not found")
         raise HTTPException(status_code=403, detail="You don't have enough permission")
     raise HTTPException(status_code=401, detail="Not authorized")
